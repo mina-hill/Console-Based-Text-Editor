@@ -64,10 +64,10 @@ int main(int argc, char* argv[])
 	gotoxy(x, y);
 	cout << " Welcome to the Notepad.";
 	x = 1, y = 2;
-	gotoxy(x, y);
-	cout<<  " This is the area where you are supposed to write the content."; 
+	/*gotoxy(x, y);
+	cout<<  " This is the area where you are supposed to write the content."; */
 	//go to writing area
-	x = 1, y = 3;
+	//x = 1, y = 3;
 	gotoxy(x, y);
 
 	LinkList2D list;
@@ -98,26 +98,26 @@ int main(int argc, char* argv[])
 					switch (eventBuffer[i].Event.KeyEvent.wVirtualKeyCode) {
 
 					case VK_UP: //up
-						/*y--;
-						gotoxy(x, y);
+						y--;
+						/*gotoxy(x, y);
 						list.cursorUpdate(x, y);*/
 						list.moveCursorUp();
 						break;
 					case VK_DOWN: //down
-						/*y++;
-						gotoxy(x, y);
+						y++;
+						/*gotoxy(x, y);
 						list.cursorUpdate(x, y);*/
 						list.moveCursorDown();
 						break;
 					case VK_RIGHT: //right
-						/*x++;
-						gotoxy(x, y);
+						x++;
+						/*gotoxy(x, y);
 						list.cursorUpdate(x, y);*/
 						list.moveCursorRight();
 						break;
 					case VK_LEFT: //left
-						/*x--;
-						gotoxy(x, y);
+						x--;
+						/*gotoxy(x, y);
 						list.cursorUpdate(x, y);*/
 						list.moveCursorLeft();
 						break;
@@ -126,14 +126,15 @@ int main(int argc, char* argv[])
 						Running = false; 
 						break;
 					case VK_RETURN: //enter
-						cout << "\n"; 
+						//cout << "\n"; 
 						list.newLine();
 						y++;
 						x = 0;
-						gotoxy(x, y);
+						//gotoxy(x, y);
 						break;
 					case VK_BACK:
 						list.handleBackspace();
+						x--;
 						printUpdate = true;
 						break;
 					default:
@@ -141,8 +142,8 @@ int main(int argc, char* argv[])
 						if ((letter >= 'A' && letter <= 'Z') || (letter >= 'a' && letter <= 'z') || letter == ' ')
 						{							
 							list.addLetter(letter);
-							x++;
-							gotoxy(x, y);
+ 							x++;
+							//gotoxy(x, y);
 							printUpdate = true;
 						}
 						//cout << letter;
@@ -155,7 +156,9 @@ int main(int argc, char* argv[])
 		}
 		if (printUpdate)
 		{
-			list.printList();
+			list.printList(x,y);
+			gotoxy(x, y);
+			//list.printAroundCursor(1);
 			printUpdate = false;
 		}
 	} // end program loop
