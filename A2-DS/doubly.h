@@ -20,7 +20,7 @@ private:
 	CharacterNode* up;
 	CharacterNode* down;
 public:
-	CharacterNode(const char newLetter =  ' ', int c = currCol, int ln = currLine, CharacterNode* l = nullptr, CharacterNode* r = nullptr,
+	CharacterNode(const char newLetter =  '\0', int c = currCol, int ln = currLine, CharacterNode* l = nullptr, CharacterNode* r = nullptr,
 		CharacterNode* u = nullptr, CharacterNode* d = nullptr) 
 		: letter(newLetter), left(l), right(r), up(u), down(d),col(c), line(ln){}
 	char getLetter() const
@@ -98,7 +98,7 @@ public:
 
 };
 int CharacterNode::currCol = 1;
-int CharacterNode::currLine = 3;
+int CharacterNode::currLine = 2;
 
 class LinkList2D {
 private:
@@ -144,7 +144,10 @@ public:
 	void cursorUpdate(int c, int l);
 	//real funcs
 	void addLetter(char newLetter);
+	void addLetterr(char newLetter);
 	void newLine();
+	void newLinee();
+	//void handleBackspace();
 	void handleBackspace();
 	void deleteNode();
 	void printList(int x=1,int y=3);
@@ -159,51 +162,21 @@ public:
 LinkList2D::LinkList2D(int width, int height, CharacterNode* h, CharacterNode* currCol, CharacterNode* currLine) 
 	: cursorX(1), cursorY(2), inputAreaWidth(width), inputAreaHeight(height), head(h), currentCol(currCol), currentLine(currLine)
 {
-	//head = new CharacterNode(); // Dummy head node
-	//currentCol = head;
-	//currentCol->setRight(new CharacterNode()); //dummy node in next
-	//acurrentLine = head;
+	CharacterNode* startDummy = new CharacterNode(); // Start dummy node
+	CharacterNode* endDummy = new CharacterNode();   // End dummy node
+
+	startDummy->setRight(endDummy);
+	endDummy->setLeft(startDummy);
+
+	// Set head and current pointers to the start dummy
+	head = startDummy;
+	currentLine = startDummy;
+	currentCol = startDummy;
+
 	cursorUpdate(cursorX, cursorY);
 }
-//void LinkList2D::addLetter(char newLetter)
-//{
-//	if (isEmpty())
-//	{
-//		head = new CharacterNode(newLetter, cursorX, cursorY);
-//		currentCol = head;
-//		currentLine = head;
-//	}
-//	else
-//	{
-//		if (currentCol->getLetter() == '\0') // Special case for new line
-//		{
-//			currentCol->setLetter(newLetter);
-//		}
-//		else
-//		{
-//			if (cursorX == inputAreaWidth - 1) // Edge case for right boundary
-//			{
-//				cursorUpdate(1, cursorY + 1); // Move to next line and reset column
-//			}
-//			else
-//			{
-//				// Insert the new node at the cursor position
-//				CharacterNode* newNode = new CharacterNode(newLetter, cursorX, cursorY);
-//				newNode->setRight(currentCol->getRight());
-//				if (currentCol->getRight() != nullptr)
-//				{
-//					currentCol->getRight()->setLeft(newNode);
-//				}
-//				currentCol->setRight(newNode);
-//				newNode->setLeft(currentCol);
-//				currentCol = newNode;
-//			}
-//		}
-//	}
-//	cursorUpdate(cursorX + 1, cursorY); // Move cursor to next position
-//}
-
-void LinkList2D::addLetter(char newLetter)
+//old
+void LinkList2D::addLetterr(char newLetter)
 {
 	//int prevX = cursorX;
 	//int prevY = cursorY;
@@ -281,7 +254,73 @@ void LinkList2D::addLetter(char newLetter)
 	//printAroundCursor(1);
 	cursorUpdate(cursorX, cursorY); 
 }
+//new
+void LinkList2D::addLetter(char newLetter)
+{
+	bool lineNew = 0;
+	if (currentCol->getRight() != nullptr && currentCol->getRight()->getCol() == inputAreaWidth - 1) //edge case of right boundary
+	{
+		lineNew = 1;
+		this->newLine();
+	}
+	/*if (lineNew)
+	{
+		cursorY++;
+	}*/
+	//make new Node and initialize it
+	CharacterNode* newNode = new CharacterNode(newLetter, cursorX-1, cursorY);	
+
+	if (currentCol->getRight() != nullptr)
+	{
+		CharacterNode* endDummy = currentCol->getRight();  // The end dummy
+		currentCol->setRight(newNode);
+		newNode->setLeft(currentCol);
+
+		newNode->setRight(endDummy);
+		endDummy->setLeft(newNode);
+
+		//updating cols of each node on the right
+		CharacterNode* temp = currentCol->getRight();
+		while (temp != nullptr)
+		{
+			temp->setCol(temp->getCol() + 1);  // Increment the column for each node to the right
+			temp = temp->getRight();
+		}
+	}
+	// Update currentCol to point to the newly inserted node
+	currentCol = newNode;
+
+	cursorX++;
+	cursorUpdate(cursorX, cursorY);
+}
 void LinkList2D::newLine()
+{
+
+	CharacterNode* newStartDummy = new CharacterNode();// '\n', cursorX - 1, cursorY); // Start dummy node
+	//cursorX++;
+	CharacterNode* newEndDummy = new CharacterNode();// '\n', cursorX - 1, cursorY);   // End dummy node
+
+	if (currentLine != nullptr) 
+	{
+		currentLine->setDown(newStartDummy);
+		newStartDummy->setUp(currentLine);
+	}
+	// Link the start dummy to the end dummy
+	newStartDummy->setRight(newEndDummy);
+	newEndDummy->setLeft(newStartDummy);
+
+	// Update currentLine and currentCol to the new line's start dummy node
+	currentLine = newStartDummy;
+	currentCol = newStartDummy;
+	//cursor update
+	/*cursorY++;
+	cursorX = 1;*/
+	//cursorUpdate(cursorX, cursorY);
+	cursorX = 1;  // Reset the column to 1 for the new line
+	cursorY++;
+}
+//old
+void LinkList2D::newLinee()
 {
 	//move to next line and reset column
 	//cursorUpdate(1, CharacterNode::getCurrLine() + 1);
@@ -398,8 +437,11 @@ void LinkList2D::printList(int x,int y)
 		CharacterNode* currentC = currentR;
 		while (currentC != nullptr)
 		{
-			gotoxy(currentC->getCol(), currentR->getLine());
-			std::cout << currentC->getLetter();
+			if (currentC->getLetter() != '\0')  // or some other condition to check if it's a dummy
+			{
+				gotoxy(currentC->getCol(), currentC->getLine());  // Move cursor
+				std::cout << currentC->getLetter();
+			}
 			currentC = currentC->getRight();
 		}
 		currentR = currentR->getDown();

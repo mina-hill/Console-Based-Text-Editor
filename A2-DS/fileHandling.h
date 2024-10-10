@@ -84,7 +84,10 @@ public:
 
 			while (currentCol != nullptr) // Traverse columns (rightwards)
 			{
-				outFile << currentCol->getLetter();  // Output each character
+				if (currentCol->getLetter() != '\0')
+				{
+					outFile << currentCol->getLetter();
+				}
 				currentCol = currentCol->getRight(); // Move to the next column
 			}
 
